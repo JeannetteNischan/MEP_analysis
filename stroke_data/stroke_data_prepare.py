@@ -11,13 +11,11 @@ import numpy as np
 import os
 import fnmatch
 from scipy import io
-from scipy.io import loadmat
 
 #%% 2. Predefine variables and conditions
 # key of interest (recorded physiological data)
 direct = '/home/jeanettenischan/Data/data_INTENS_TMS/data/' #main folder with all subject subfolders
 subjects = ['015','011','014']
-filename = 'IO_ipsilesional'
 
 #%% . prepare data for processing
 
@@ -42,6 +40,8 @@ def get_ids(file_array):
             subject_ids.append(subject)
     return subject_ids    
        
+
+
 # 1.2 define a function to load xdf files and save as a matfile
 def xdf_to_mat(alias, file_array):
     patient_id = alias
@@ -103,27 +103,6 @@ def xdf_to_mat(alias, file_array):
         filename = direct + "/" + patient_id + "/pre1/" + "IO_" + hemisphere + ".mat"
         io.savemat(filename, data_IO)
 
-# 1.3 define function to concatenate 180 and 0 from same patient
-#def merge_files(direct, subjects, filename):
-    #for i in subjects:
-        #hem_0   = loadmat(direct  + i + '/pre1/' + filename + '_0.mat')
-        #hem_180 = loadmat(direct  + i + '/pre1/' + filename + '_180.mat')
-        
-        #np.concatenate((hem_0['BrainVisionRDA_stamps'],hem_180['BrainVisionRDA_stamps']),axis=None)
-        #np.concatenate((hem_0['BrainVisionRDA_series'], hem_180['BrainVisionRDA_series']),axis=None)
-        #np.concatenate((hem_0['tms_artifact'][0],hem_180['tms_artifact'][0]),axis=None)
-        #print(hem_0['tms_artifact'])
-        #np.concatenate((hem_0['spongebob_timeseries'],hem_180['spongebob_timeseries']),axis=None)
-        #np.concatenate((hem_0['spongebob_timestamps'],hem_180['spongebob_timestamps']),axis=None)
-        #ds = [hem_0, hem_180]
-        #d = {}
-        #for k in hem_0.keys():
-        #    d[k] = tuple(d[k] for d in ds)
-
-        #file_name = direct + "/" + i + "/pre1/" + "IO_ipsilesional.mat"
-        #io.savemat(file_name, hem_0)    
-       
-
 #%% Iterate over patient folders and check if preparation is neccessary
 xdf_files = find_files(direct)
 #print(xdf_files)
@@ -132,4 +111,3 @@ print(subject_ids)
 
 for alias in subject_ids:
     xdf_to_mat(alias, xdf_files)
-    #merge_files(direct,subjects,filename)
