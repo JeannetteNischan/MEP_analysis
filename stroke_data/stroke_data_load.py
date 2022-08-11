@@ -6,6 +6,7 @@
    Date of first working version: 27. May 2022'''
 
 #%% 1. import tools and libraries
+from matplotlib.font_manager import json_dump
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -61,7 +62,7 @@ def get_chan_idx(array_ch, target_chan):
     see also https://thispointer.com/find-the-index-of-a-value-in-numpy-array/'''
     return np.where(array_ch == target_chan)[0][0]
 
-#3.2. define function to extract stim intensity from aary of strings
+#3.2. define function to extract stim intensity from array of strings
 def extract_intens (string_array):
     '''extracts the value of a dictionary that was stored as string
     iterates over an array of dict strings and converts each into actual dict
@@ -86,7 +87,8 @@ def load_files (alias, channel):
  
     #[f"{alias}"] = {} #predefine empty dictionary for subject
     subject_dict = {}
-    
+    timepoints = []
+
     # check if file exsits and load data for each timepoint
     if os.path.isfile(direct + alias + '/pre1/IO_ipsilesional.mat'):
         pre1  = loadmat(direct + alias + '/pre1/IO_ipsilesional.mat')
@@ -125,7 +127,10 @@ def load_files (alias, channel):
             if 'localite_timeseries' in pre1:
                 subject_dict['pre1']['stim_intens']  = extract_intens(pre1[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre1 not available') 
+                print('stimulation intensity for subject ' + alias + ' at pre1 not available')
+                timepoints.append('pre1') 
+        else:
+            subject_dict.pop('pre1')
 
         if post1:
             subject_dict['post1']['MEP_data']    = post1[data][:,get_chan_idx(post1['channel_label'], chan)]
@@ -134,30 +139,45 @@ def load_files (alias, channel):
                 subject_dict['post1']['stim_intens'] = extract_intens(post1[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at post1 not available')  
+                timepoints.append('post1') 
+        else:
+            subject_dict.pop('post1')   
+
         if pre3:
             subject_dict['pre3']['MEP_data']     = pre3[data][:,get_chan_idx(pre3['channel_label'], chan)]
             subject_dict['pre3']['TMS_pulse']          =  pre3[tms][0]
             if 'localite_timeseries' in pre3:
                 subject_dict['pre3']['stim_intens']  = extract_intens(pre3[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre3 not available')       
+                print('stimulation intensity for subject ' + alias + ' at pre3 not available')
+                timepoints.append('pre3')  
+        else:
+            subject_dict.pop('pre3')
+
         if post3:
             subject_dict['post3']['MEP_data']    = post3[data][:,get_chan_idx(post3['channel_label'], chan)]
             subject_dict['post3']['TMS_pulse']         =  post3[tms][0]
             if 'localite_timeseries' in post3:
                 subject_dict['post3']['stim_intens'] = extract_intens(post3[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at post3 not available')   
+                print('stimulation intensity for subject ' + alias + ' at post3 not available')
+                timepoints.append('post3')    
+        else:
+            subject_dict.pop('post3')
+
         if post5:
             subject_dict['post5']['MEP_data']    = post5[data][:,get_chan_idx(post5['channel_label'], chan)]
             subject_dict['post5']['TMS_pulse']         =  post5[tms][0]
             if 'localite_timeseries' in post5:
                 subject_dict['post5']['stim_intens'] = extract_intens(post5[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at post5 not available') 
+                print('stimulation intensity for subject ' + alias + ' at post5 not available')
+                timepoints.append('post5')  
+        else:
+            subject_dict.pop('post5')        
 
         #print('loading data for subject ' + alias + ' successful')   
-        return subject_dict 
+        return subject_dict, timepoints 
 
     elif (alias in p_EDC_right):
         chan = channel+'_R' # if paretic side is right
@@ -170,28 +190,44 @@ def load_files (alias, channel):
             if 'localite_timeseries' in pre1:
                 subject_dict['pre1']['stim_intens']  = extract_intens(pre1[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre1 not available')         
+                print('stimulation intensity for subject ' + alias + ' at pre1 not available')
+                timepoints.append('pre1') 
+        else:
+            subject_dict.pop('pre1')
+
         if post1:
             subject_dict['post1']['MEP_data']    = post1[data][:,get_chan_idx(post1['channel_label'], chan)]
             subject_dict['post1']['TMS_pulse']         =  post1[tms][0]
             if 'localite_timeseries' in post1:
                 subject_dict['post1']['stim_intens'] = extract_intens(post1[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at post1 not available')  
+                print('stimulation intensity for subject ' + alias + ' at post1 not available')
+                timepoints.append('post1')   
+        else:
+            subject_dict.pop('post1')
+
         if pre3:
             subject_dict['pre3']['MEP_data']     = pre3[data][:,get_chan_idx(pre3['channel_label'], chan)]
             subject_dict['pre3']['TMS_pulse']          =  pre3[tms][0]
             if 'localite_timeseries' in pre3:
                 subject_dict['pre3']['stim_intens']  = extract_intens(pre3[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre3 not available')       
+                print('stimulation intensity for subject ' + alias + ' at pre3 not available')
+                timepoints.append('pre3')        
+        else:
+            subject_dict.pop('pre3')
+
         if post3:
             subject_dict['post3']['MEP_data']    = post3[data][:,get_chan_idx(post3['channel_label'], chan)]
             subject_dict['post3']['TMS_pulse']         =  post3[tms][0]
             if 'localite_timeseries' in post3:
                 subject_dict['post3']['stim_intens'] = extract_intens(post3[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at post3 not available')   
+                print('stimulation intensity for subject ' + alias + ' at post3 not available') 
+                timepoints.append('post3')   
+        else:
+            subject_dict.pop('post3')
+
         if post5:
             subject_dict['post5']['MEP_data']    = post5[data][:,get_chan_idx(post5['channel_label'], chan)]
             subject_dict['post5']['TMS_pulse']         =  post5[tms][0]
@@ -199,9 +235,13 @@ def load_files (alias, channel):
                 subject_dict['post5']['stim_intens'] = extract_intens(post5[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at post5 not available') 
-            
+                timepoints.append('post5') 
+        else:
+            subject_dict.pop('post5')
+
+
         #print('loading data for subject ' + alias + ' successful')
-        return subject_dict
+        return subject_dict, timepoints
 
     else:
         print('Subject ID not found')
@@ -210,6 +250,7 @@ def load_files (alias, channel):
 def load_special_files(alias, channel) :
        #predefine empty dictionary for subject
     subject_dict = {}
+    timepoints = []
     
     # check if file exsits and load data for each timepoint
     if os.path.isfile(direct + alias + '/pre1/IO_ipsilesional_0.mat'):
@@ -254,7 +295,11 @@ def load_special_files(alias, channel) :
             if 'localite_timeseries' in pre1_0:
                 subject_dict['pre1']['pre1_0']['stim_intens']  = extract_intens(pre1_0[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre1_0 not available')            
+                print('stimulation intensity for subject ' + alias + ' at pre1_0 not available')
+                timepoints.append('pre1_0')       
+        else:
+            subject_dict.pop('pre1_0')
+
         if pre1_180:    
             subject_dict['pre1']['pre1_180']['MEP_data']     = pre1_180[data][:,get_chan_idx(pre1_180['channel_label'], chan)]
             subject_dict['pre1']['pre1_180']['TMS_pulse']          =  pre1_180[tms][0]    
@@ -262,6 +307,10 @@ def load_special_files(alias, channel) :
                 subject_dict['pre1']['pre1_180']['stim_intens']  = extract_intens(pre1_180[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at pre1_180 not available')
+                timepoints.append('pre1_180') 
+        else:
+            subject_dict.pop('pre1_180')
+
         if post1:
             subject_dict['post1']['MEP_data']    = post1[data][:,get_chan_idx(post1['channel_label'], chan)]
             subject_dict['post1']['TMS_pulse']         =  post1[tms][0]
@@ -269,30 +318,45 @@ def load_special_files(alias, channel) :
                 subject_dict['post1']['stim_intens']  = extract_intens(post1[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at post1 not available') 
+                timepoints.append('post1') 
+        else:
+            subject_dict.pop('post1')
+
         if pre3:
             subject_dict['pre3']['MEP_data']     = pre3[data][:,get_chan_idx(pre3['channel_label'], chan)]
             subject_dict['pre3']['TMS_pulse']          =  pre3[tms][0]
-            if 'localite_timeseries' in post1:
+            if 'localite_timeseries' in pre3:
                 subject_dict['pre3']['stim_intens']  = extract_intens(pre3[stim_intens])
             else:
                 print('stimulation intensity for subject ' + alias + ' at pre3 not available')  
+                timepoints.append('pre3') 
+        else:
+            subject_dict.pop('pre3')
+
         if post3:
             subject_dict['post3']['MEP_data']    = post3[data][:,get_chan_idx(post3['channel_label'], chan)]
             subject_dict['post3']['TMS_pulse']         =  post3[tms][0]
-            if 'localite_timeseries' in post1:
+            if 'localite_timeseries' in post3:
                 subject_dict['post3']['stim_intens']  = extract_intens(post3[stim_intens])
             else:
                 print('stimulation intensity for subject ' + alias + ' at post3 not available')  
+                timepoints.append('post3') 
+        else:
+            subject_dict.pop('post3')
+
         if post5:
             subject_dict['post5']['MEP_data']    = post5[data][:,get_chan_idx(post5['channel_label'], chan)]
             subject_dict['post5']['TMS_pulse']         =  post5[tms][0]
-            if 'localite_timeseries' in post1:
+            if 'localite_timeseries' in post5:
                 subject_dict['post5']['stim_intens']  = extract_intens(post5[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at post5 not available')  
-            
+                print('stimulation intensity for subject ' + alias + ' at post5 not available') 
+                timepoints.append('post5')  
+        else:
+            subject_dict.pop('post5')
+
         #print('loading data for subject ' + alias + ' successful')   
-        return subject_dict 
+        return subject_dict, timepoints
 
     elif (alias in p_EDC_right):
         chan = channel+'_R' # if paretic side is right
@@ -303,47 +367,70 @@ def load_special_files(alias, channel) :
             subject_dict['pre1']['pre1_0']['MEP_data']     = pre1_0[data][:,get_chan_idx(pre1_0['channel_label'], chan)]
             subject_dict['pre1']['pre1_0']['TMS_pulse']          =  pre1_0[tms][0]
             if 'localite_timeseries' in pre1_0:
-                subject_dict['pre1']['pre1_0']['stim_intens']  = extract_intens(pre1_0[stim_intens], alias, 'pre1_0') 
+                subject_dict['pre1']['pre1_0']['stim_intens']  = extract_intens(pre1_0[stim_intens]) 
             else:
-                print('stimulation intensity for subject ' + alias + ' at pre1_0 not available')            
+                print('stimulation intensity for subject ' + alias + ' at pre1_0 not available') 
+                timepoints.append('pre1_0')            
+        else:
+            subject_dict.pop('pre1_0')
+
         if pre1_180:    
             subject_dict['pre1']['pre1_180']['MEP_data']     = pre1_180[data][:,get_chan_idx(pre1_180['channel_label'], chan)]
             subject_dict['pre1']['pre1_180']['TMS_pulse']          =  pre1_180[tms][0]    
             if 'localite_timeseries' in pre1_180:
-                subject_dict['pre1']['pre1_180']['stim_intens']  = extract_intens(pre1_180[stim_intens], alias, 'pre1_180') 
+                subject_dict['pre1']['pre1_180']['stim_intens']  = extract_intens(pre1_180[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at pre1_180 not available')
+                timepoints.append('pre1_180') 
+        else:
+            subject_dict.pop('pre1_180')
+
         if post1:
             subject_dict['post1']['MEP_data']    = post1[data][:,get_chan_idx(post1['channel_label'], chan)]
             subject_dict['post1']['TMS_pulse']         =  post1[tms][0]
             if 'localite_timeseries' in post1:
-                subject_dict['post1']['stim_intens']  = extract_intens(post1[stim_intens], alias, 'post1') 
+                subject_dict['post1']['stim_intens']  = extract_intens(post1[stim_intens]) 
             else:
                 print('stimulation intensity for subject ' + alias + ' at post1 not available') 
+                timepoints.append('post1') 
+        else:
+            subject_dict.pop('post1')
+
         if pre3:
             subject_dict['pre3']['MEP_data']     = pre3[data][:,get_chan_idx(pre3['channel_label'], chan)]
             subject_dict['pre3']['TMS_pulse']          =  pre3[tms][0]
-            if 'localite_timeseries' in post1:
-                subject_dict['pre3']['stim_intens']  = extract_intens(pre3[stim_intens], alias, 'pre3')
+            if 'localite_timeseries' in pre3:
+                subject_dict['pre3']['stim_intens']  = extract_intens(pre3[stim_intens])
             else:
                 print('stimulation intensity for subject ' + alias + ' at pre3 not available')  
+                timepoints.append('pre3') 
+        else:
+            subject_dict.pop('pre3')
+
         if post3:
             subject_dict['post3']['MEP_data']    = post3[data][:,get_chan_idx(post3['channel_label'], chan)]
             subject_dict['post3']['TMS_pulse']         =  post3[tms][0]
-            if 'localite_timeseries' in post1:
-                subject_dict['post3']['stim_intens']  = extract_intens(post3[stim_intens], alias, 'post3')
+            if 'localite_timeseries' in post3:
+                subject_dict['post3']['stim_intens']  = extract_intens(post3[stim_intens])
             else:
-                print('stimulation intensity for subject ' + alias + ' at post3 not available')  
+                print('stimulation intensity for subject ' + alias + ' at post3 not available') 
+                timepoints.append('post3')  
+        else:
+            subject_dict.pop('post5')
+
         if post5:
             subject_dict['post5']['MEP_data']    = post5[data][:,get_chan_idx(post5['channel_label'], chan)]
             subject_dict['post5']['TMS_pulse']         =  post5[tms][0]
-            if 'localite_timeseries' in post1:
-                subject_dict['post5']['stim_intens']  = extract_intens(post5[stim_intens], alias, 'post5')
+            if 'localite_timeseries' in post5:
+                subject_dict['post5']['stim_intens']  = extract_intens(post5[stim_intens])
             else:
                 print('stimulation intensity for subject ' + alias + ' at post5 not available')
-            
+                timepoints.append('post5') 
+        else:
+            subject_dict.pop('post5')
+
         #print('loading data for subject ' + alias + ' successful')
-        return subject_dict
+        return subject_dict, timepoints
     else:
         print('Subject ID not found')
 
@@ -351,15 +438,25 @@ def load_special_files(alias, channel) :
 # %% 4. iterate over list of subjects apply the functions to load, modify and save processed data
 for alias in subject_ids:
     if alias == '011' or alias == '014' or alias == '015':
-        subject_dict = load_special_files(alias, channel)
+        subject_dict, timepoints = load_special_files(alias, channel)
         print('loading data for subject ' + alias + ' successful') 
     else:
-        subject_dict = load_files (alias, channel) # load all data of interest with function
+        subject_dict, timepoints = load_files (alias, channel) # load all data of interest with function
         print('loading data for subject ' + alias + ' successful') 
 
-    filename = target_direct + alias + '.csv'
+    if len(timepoints) != 0:
+        stim_intens_miss[alias] = timepoints
+
+    filename = target_direct + alias 
     df = pd.DataFrame.from_dict(subject_dict) 
-    df.to_csv (filename) 
+    df.to_csv (filename + '.csv', line_terminator=None ) 
+    df.to_json (filename + '.json')
     #with open(filename, "w") as outfile:  #json doesn't work on np.arrays
     #json.dump(subject_dict, outfile)
-       
+
+#file_out =  '/home/jeanettenischan/Data/data_INTENS_TMS/stim_intens_miss.json' 
+print(stim_intens_miss)
+with open('/home/jeanettenischan/Data/data_INTENS_TMS/stim_intens_miss.json' , 'w') as outfile:
+    json.dump(stim_intens_miss, outfile) 
+#data_frame = pd.DataFrame.from_dict(stim_intens_miss) 
+#data_frame.to_csv (file_out)         
